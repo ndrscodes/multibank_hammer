@@ -1,0 +1,146 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-g",
+      "-Isrc/include",
+      "-Isrc/evsets",
+      "-msse4.2",
+      "-ggdb",
+      "-DDATA_DIR=\"/home/ndrscodes/Dokumente/ba/forks/multibank_hammer/data/\"",
+      "-o",
+      "src/.obj/addr-mapper.o",
+      "src/addr-mapper.c"
+    ],
+    "directory": "/home/ndrscodes/Dokumente/ba/forks/multibank_hammer",
+    "file": "/home/ndrscodes/Dokumente/ba/forks/multibank_hammer/src/addr-mapper.c",
+    "output": "/home/ndrscodes/Dokumente/ba/forks/multibank_hammer/src/.obj/addr-mapper.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-g",
+      "-Isrc/include",
+      "-Isrc/evsets",
+      "-msse4.2",
+      "-ggdb",
+      "-DDATA_DIR=\"/home/ndrscodes/Dokumente/ba/forks/multibank_hammer/data/\"",
+      "-o",
+      "src/.obj/allocator.o",
+      "src/allocator.c"
+    ],
+    "directory": "/home/ndrscodes/Dokumente/ba/forks/multibank_hammer",
+    "file": "/home/ndrscodes/Dokumente/ba/forks/multibank_hammer/src/allocator.c",
+    "output": "/home/ndrscodes/Dokumente/ba/forks/multibank_hammer/src/.obj/allocator.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-g",
+      "-Isrc/include",
+      "-Isrc/evsets",
+      "-msse4.2",
+      "-ggdb",
+      "-DDATA_DIR=\"/home/ndrscodes/Dokumente/ba/forks/multibank_hammer/data/\"",
+      "-o",
+      "src/.obj/dram-address.o",
+      "src/dram-address.c"
+    ],
+    "directory": "/home/ndrscodes/Dokumente/ba/forks/multibank_hammer",
+    "file": "/home/ndrscodes/Dokumente/ba/forks/multibank_hammer/src/dram-address.c",
+    "output": "/home/ndrscodes/Dokumente/ba/forks/multibank_hammer/src/.obj/dram-address.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-g",
+      "-Isrc/include",
+      "-Isrc/evsets",
+      "-msse4.2",
+      "-ggdb",
+      "-DDATA_DIR=\"/home/ndrscodes/Dokumente/ba/forks/multibank_hammer/data/\"",
+      "-o",
+      "src/.obj/hammer-suite.o",
+      "src/hammer-suite.c"
+    ],
+    "directory": "/home/ndrscodes/Dokumente/ba/forks/multibank_hammer",
+    "file": "/home/ndrscodes/Dokumente/ba/forks/multibank_hammer/src/hammer-suite.c",
+    "output": "/home/ndrscodes/Dokumente/ba/forks/multibank_hammer/src/.obj/hammer-suite.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-g",
+      "-Isrc/include",
+      "-Isrc/evsets",
+      "-msse4.2",
+      "-ggdb",
+      "-DDATA_DIR=\"/home/ndrscodes/Dokumente/ba/forks/multibank_hammer/data/\"",
+      "-o",
+      "src/.obj/main.o",
+      "src/main.c"
+    ],
+    "directory": "/home/ndrscodes/Dokumente/ba/forks/multibank_hammer",
+    "file": "/home/ndrscodes/Dokumente/ba/forks/multibank_hammer/src/main.c",
+    "output": "/home/ndrscodes/Dokumente/ba/forks/multibank_hammer/src/.obj/main.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-g",
+      "-Isrc/include",
+      "-Isrc/evsets",
+      "-msse4.2",
+      "-ggdb",
+      "-DDATA_DIR=\"/home/ndrscodes/Dokumente/ba/forks/multibank_hammer/data/\"",
+      "-o",
+      "src/.obj/memory.o",
+      "src/memory.c"
+    ],
+    "directory": "/home/ndrscodes/Dokumente/ba/forks/multibank_hammer",
+    "file": "/home/ndrscodes/Dokumente/ba/forks/multibank_hammer/src/memory.c",
+    "output": "/home/ndrscodes/Dokumente/ba/forks/multibank_hammer/src/.obj/memory.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-g",
+      "-Isrc/include",
+      "-Isrc/evsets",
+      "-msse4.2",
+      "-ggdb",
+      "-DDATA_DIR=\"/home/ndrscodes/Dokumente/ba/forks/multibank_hammer/data/\"",
+      "-o",
+      "src/.obj/params.o",
+      "src/params.c"
+    ],
+    "directory": "/home/ndrscodes/Dokumente/ba/forks/multibank_hammer",
+    "file": "/home/ndrscodes/Dokumente/ba/forks/multibank_hammer/src/params.c",
+    "output": "/home/ndrscodes/Dokumente/ba/forks/multibank_hammer/src/.obj/params.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-g",
+      "-Isrc/include",
+      "-Isrc/evsets",
+      "-msse4.2",
+      "-ggdb",
+      "-DDATA_DIR=\"/home/ndrscodes/Dokumente/ba/forks/multibank_hammer/data/\"",
+      "-o",
+      "src/.obj/utils.o",
+      "src/utils.c"
+    ],
+    "directory": "/home/ndrscodes/Dokumente/ba/forks/multibank_hammer",
+    "file": "/home/ndrscodes/Dokumente/ba/forks/multibank_hammer/src/utils.c",
+    "output": "/home/ndrscodes/Dokumente/ba/forks/multibank_hammer/src/.obj/utils.o"
+  }
+]
