@@ -117,13 +117,13 @@ void *create_output_fd(char *config, DRAMAddr d_base, SessionConfig *cfg)
 		const time_t t = time(NULL);
 		date = localtime(&t);
 
-		char yr[2];
+		char yr[3];
 		sprintf(yr, "%02d", (date->tm_year + 1900) % 100);
 		strcat(out_name, yr);
-		char mn[2];
+		char mn[3];
 		sprintf(mn, "%02d", (date->tm_mon + 1));
 		strcat(out_name, mn);
-		char dy[2];
+		char dy[3];
 		sprintf(dy, "%02d", (date->tm_mday));
 		strcat(out_name, dy);
 		strcat(out_name, ".");
@@ -162,6 +162,8 @@ void *create_output_fd(char *config, DRAMAddr d_base, SessionConfig *cfg)
 	assert(out_fd != NULL);
 
 	free(out_name);
+
+  return out_fd;
 }
 
 char *dAddr_2_str(DRAMAddr d_addr, uint8_t fields)
