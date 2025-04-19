@@ -1,3 +1,4 @@
+#include "DRAMConfig.hpp"
 #include "stdio.h"
 // #include <x86intrin.h> /* for rdtsc, rdtscp, clflush */
 #include <stdint.h>
@@ -25,6 +26,7 @@ ProfileParams *p;
 
 int main(int argc, char **argv)
 {
+  DRAMConfig::select_config(Microarchitecture::AMD_ZEN_3, 1, 4, 4, false);
 	srand(time(NULL));
 	p = (ProfileParams*)malloc(sizeof(ProfileParams));
 	if (p == NULL) {
