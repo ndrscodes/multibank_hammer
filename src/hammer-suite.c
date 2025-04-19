@@ -1,10 +1,9 @@
 #include "include/hammer-suite.h"
 
+#include "DRAMConfig.hpp"
 #include "include/memory.h"
 #include "include/utils.h"
 #include "include/allocator.h"
-#include "include/dram-address.h"
-#include "include/addr-mapper.h"
 #include "include/params.h"
 
 #include <assert.h>
@@ -21,6 +20,7 @@
 #include <limits.h>
 #include <math.h>
 #include <emmintrin.h>
+#include "DRAMAddr.hpp"
 
 #include <time.h>
 #include <setjmp.h>
@@ -87,7 +87,6 @@ typedef struct
 	MemoryBuffer *mem;
 	SessionConfig *cfg;
 	DRAMAddr d_base;	// base address for hammering
-	ADDRMapper *mapper; // dram mapper
 
 	int (*hammer_test)(void *self);
 } HammerSuite;
@@ -210,10 +209,8 @@ char *hPatt_2_str_thp(HammerPattern *h_patt, int fields)
 
 	for (int i = 0; i < h_patt->len; i++)
 	{
-		char *agg_v = thp_dram_2_virt(h_patt->d_lst[i], h_patt->v_baselst[i]);
-		virt_2_phys(h_patt->v_baselst[i]);
-		DRAMAddr agg_d = phys_2_dram(virt_2_phys(agg_v));
-		dAddr_str = dAddr_2_str(agg_d, fields);
+		char *agg_v = (char *)h_patt->d_lst[i].to_virt();
+		dAddr_str = dAddr_2_str(h_patt->d_lst[i], fields);
 		strcat(patt_str, dAddr_str);
 		if (i + 1 != h_patt->len)
 		{
@@ -232,9 +229,9 @@ char *hPatt_2_str_gb1(HammerPattern *h_patt, int fields)
 
 	for (int i = 0; i < h_patt->len; i++)
 	{
-		char *agg_v = gb1_dram_2_virt(h_patt->d_lst[i], h_patt->v_baselst[i]);
+		char *agg_v = (char *)h_patt->d_lst[i].to_virt();
 		virt_2_phys(h_patt->v_baselst[i]);
-		DRAMAddr agg_d = phys_2_dram(virt_2_phys(agg_v));
+		DRAMAddr agg_d = h_patt->d_lst[i];
 		dAddr_str = dAddr_2_str(agg_d, fields);
 		strcat(patt_str, dAddr_str);
 		if (i + 1 != h_patt->len)
@@ -294,7 +291,7 @@ uint64_t hammer_thp(HammerPattern *patt, MemoryBuffer *mem, int skip_iter)
 	char **v_lst = (char **)malloc(sizeof(char *) * patt->len);
 	for (size_t i = 0; i < patt->len; i++)
 	{
-		v_lst[i] = thp_dram_2_virt(patt->d_lst[i], patt->v_baselst[i]);
+		v_lst[i] = (char *)patt->d_lst[i].to_virt();
 	}
 
 	sched_yield();
@@ -344,7 +341,7 @@ uint64_t hammer_gb1(HammerPattern *patt, MemoryBuffer *mem, int skip_iter)
 	char **v_lst = (char **)malloc(sizeof(char *) * patt->len);
 	for (size_t i = 0; i < patt->len; i++)
 	{
-		v_lst[i] = gb1_dram_2_virt(patt->d_lst[i], patt->v_baselst[i]);
+		v_lst[i] = (char *)patt->d_lst[i].to_virt();
 	}
 
 	sched_yield();
@@ -392,7 +389,7 @@ void fill_stripe_thp(DRAMAddr d_addr, char *base_v, uint8_t val, MemoryBuffer *m
 	for (size_t col = 0; col < ROW_SIZE; col += CL_SIZE)
 	{
 		d_addr.col = col;
-		char *tar_v = thp_dram_2_virt(d_addr, base_v);
+		char *tar_v = (char *)d_addr.to_virt();
 
 		memset(tar_v, val, CL_SIZE);
 		clflush(tar_v);
@@ -435,7 +432,7 @@ void fill_stripe_gb1(DRAMAddr d_addr, char *base_v, uint8_t val, MemoryBuffer *m
 	for (size_t col = 0; col < ROW_SIZE; col += CL_SIZE)
 	{
 		d_addr.col = col;
-		char *tar_v = gb1_dram_2_virt(d_addr, base_v);
+		char *tar_v = (char *)d_addr.to_virt();
 
 		memset(tar_v, val, CL_SIZE);
 		clflush(tar_v);
@@ -494,7 +491,7 @@ void scan_chunk(HammerSuite *suite, HammerPattern *h_patt, MemoryChunk tar_chunk
 			if (*tmp_v != t_val)
 			{
 
-				DRAMAddr d_tmp = phys_2_dram(virt_2_phys((char *)tmp_v));
+				DRAMAddr d_tmp = DRAMAddr(tmp_v);
 				flip.d_vict = d_tmp;
 				flip.f_og = (uint8_t)t_val;
 				flip.f_new = *(uint8_t *)(tmp_v);
@@ -514,21 +511,19 @@ int mem_check(SessionConfig *cfg, MemoryBuffer *memory)
 {
 	fprintf(stderr, "Running mem_check session...\n");
 	MemoryBuffer mem = *memory;
-	DRAMAddr d_base = phys_2_dram(virt_2_phys(mem.buffer[0], &mem));
+	DRAMAddr d_base = DRAMAddr(mem.buffer[0]);
 	int acts;
 
 	HammerSuite *suite = (HammerSuite *)malloc(sizeof(HammerSuite));
 	suite->mem = &mem;
 	suite->cfg = cfg;
 	suite->d_base = d_base;
-	suite->mapper = (ADDRMapper *)malloc(sizeof(ADDRMapper));
-	init_addr_mapper(suite->mapper, &mem, &suite->d_base, cfg->h_rows);
 
 	create_output_fd("memcheck", d_base, cfg);
 	fprintf(out_fd, "!scan_check run\n");
 	fflush(out_fd);
 
-	int tot_banks = get_banks_cnt();
+	int tot_banks = DRAMConfig::get().banks();
 	MemoryChunk mem_chunk[NUM_PAGES];
 
 	// Init data
@@ -613,7 +608,7 @@ int mem_check(SessionConfig *cfg, MemoryBuffer *memory)
 
 						char *tar_base_v = mem.buffer[idx_tar[tar_chunk]];
 
-						DRAMAddr tar_base_d = thp_virt_2_dram(tar_base_v);
+						DRAMAddr tar_base_d = DRAMAddr(tar_base_v);
 						DRAMAddr tar_d;
 
 						if ((i / sh_num_banks) % 2 == 0)
@@ -630,7 +625,7 @@ int mem_check(SessionConfig *cfg, MemoryBuffer *memory)
 						}
 
 						// sanity check
-						char *tar_v = thp_dram_2_virt(tar_d, tar_base_v);
+						char *tar_v = (char *)tar_d.to_virt();
 
 						sh_agg_d[i] = tar_d;
 						sh_base_v[i] = tar_base_v;
@@ -729,7 +724,7 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
 {
 	fprintf(stderr, "Running mem_check 1GB session...\n");
 	MemoryBuffer mem = *memory;
-	DRAMAddr d_base = phys_2_dram(virt_2_phys(mem.buffer[0], &mem));
+	DRAMAddr d_base = DRAMAddr(mem.buffer[0]);
 	int acts;
 
 	fprintf(stderr, "Huge base - virt: 0x%lx Phys: 0x%lx Dram: %d/%d/%d\n", mem.buffer[0], virt_2_phys(mem.buffer[0], &mem), d_base.bank,
@@ -739,23 +734,21 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
 	suite->mem = &mem;
 	suite->cfg = cfg;
 	suite->d_base = d_base;
-	suite->mapper = (ADDRMapper *)malloc(sizeof(ADDRMapper));
-	init_addr_mapper(suite->mapper, &mem, &suite->d_base, cfg->h_rows);
 
 	create_output_fd("memcheck_1gb", d_base, cfg);
 	fprintf(out_fd, "!scan_check run\n");
 	fflush(out_fd);
 
-	int tot_banks = get_banks_cnt();
+	int tot_banks = DRAMConfig::get().banks();
 	int tot_rows = 1000;
 
 	// addr translation test
 	char *ttmp_v = mem.buffer[0];
-	DRAMAddr ttmp_d = gb1_virt_2_dram(ttmp_v);
+	DRAMAddr ttmp_d = DRAMAddr(ttmp_v);
 
 	for (int i = 0; i < 100; i++) {
 		char* tmp_v = mem.buffer[0];
-		DRAMAddr tmp_d = gb1_virt_2_dram(tmp_v);
+		DRAMAddr tmp_d = DRAMAddr(tmp_v);
 		tmp_d.row = tmp_d.row + 1 + random_int(0, tot_rows - 100);
 		tmp_d.bank = random_int(0, tot_banks);
 	}
@@ -806,7 +799,7 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
 
 					char *tar_base_v = mem.buffer[0];
 
-					DRAMAddr tar_base_d = gb1_virt_2_dram(tar_base_v);
+					DRAMAddr tar_base_d = DRAMAddr(tar_base_v);
 					DRAMAddr tar_d;
 
 					if ((i / sh_num_banks) % 2 == 0)
@@ -886,7 +879,7 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
 							{
 								if (i % (num_banks * 2) == 0)
 								{
-									char* agg_v = gb1_dram_2_virt(h_patt.d_lst[i], h_patt.v_baselst[i]);
+									char* agg_v = (char *)h_patt.d_lst[i].to_virt();
 
 									MemoryChunk tmp_chunk;
 

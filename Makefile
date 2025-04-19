@@ -6,7 +6,7 @@ ODIR=src/.obj
 DATA_DIR=$(PWD)/data/
 
 CFLAGS=-g $(IDIR) -msse4.2 -ggdb -DDATA_DIR=\"$(DATA_DIR)\"
-# CXX=g++
+CXX=g++
 #LDFLAGS= -L $(SDIR)/evsets -levsets
 
 OUT=tester
@@ -19,12 +19,17 @@ HUGEPAGE=/mnt/huge
 all: $(OUT)
 .PHONY: clean
 
-SOURCES := $(wildcard $(SDIR)/*.c)
+SOURCES := $(wildcard $(SDIR)/*.c*)
 OBJECTS := $(patsubst $(SDIR)/%.c, $(ODIR)/%.o, $(SOURCES))
 SOURCES += $(wildcard $(SDIR)/evsets/*.c)
+OBJECTS := $(patsubst $(SDIR)/%.cpp, $(ODIR)/%.o, $(SOURCES))
 OBJECTS += $(patsubst $(SDIR)/evsets/%.c, $(ODIR)/%.o, $(wildcard $(SDIR)/evsets/*.c))
 
 $(ODIR)/%.o: $(SDIR)/%.c 
+	mkdir -p $(ODIR)
+	$(CXX) -o $@ -c $< $(CFLAGS) $(LDFLAGS) $(LDEPS)
+
+$(ODIR)/%.o: $(SDIR)/%.cpp 
 	mkdir -p $(ODIR)
 	$(CXX) -o $@ -c $< $(CFLAGS) $(LDFLAGS) $(LDEPS)
 

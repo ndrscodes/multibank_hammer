@@ -12,22 +12,16 @@
 #include <fcntl.h>
 #include <stdbool.h>
 #include <getopt.h>
-#include <errno.h>
 #include <stdint.h>
 
 #include "include/utils.h"
 #include "include/types.h"
 #include "include/allocator.h"
 #include "include/memory.h"
-#include "include/dram-address.h"
 #include "include/hammer-suite.h"
 #include "include/params.h"
 
-
 ProfileParams *p;
-
-//DRAMLayout      g_mem_layout = {{{0x2040,0x24000,0x48000,0x90000}, 4}, 0x3fffe0000, ROW_SIZE-1}; //1R 8G x8 1CH
-DRAMLayout      g_mem_layout = {{{0x0144450000, 0x0022228000, 0x0111104000}, 3}, 0x1fffc0000, 0x3fff};  // 1R 8G x8 2CH
 
 int main(int argc, char **argv)
 {
