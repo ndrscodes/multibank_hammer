@@ -22,8 +22,8 @@
 #define ALIGN_std       1 << 21
 #define PATT_LEN 		4096
 #define AGGR_std		10
-#define USE_1GB FALSE
-#define USE_THP TRUE
+#define USE_1GB TRUE
+#define USE_THP FALSE
 
 #if USE_1GB
 #define NUM_PAGES   1	

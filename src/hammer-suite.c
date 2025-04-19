@@ -647,7 +647,8 @@ int mem_check(SessionConfig *cfg, MemoryBuffer *memory)
 							h_patt.d_lst = (DRAMAddr *)malloc(sizeof(DRAMAddr) * h_patt.len);
 							h_patt.v_baselst = (char **)malloc(sizeof(char *) * h_patt.len);
 
-							//fprintf(stderr, "num_banks: %d sh_num_banks: %d offset: %d offset_bk: %d sh_len: %d\n", num_banks, sh_num_banks, offset, offset_bk, sh_len);
+							fprintf(stderr, "num_banks: %d sh_num_banks: %d offset: %d offset_bk: %d sh_len: %d\n", num_banks, sh_num_banks, offset, offset_bk, sh_len);
+              fprintf(stderr, "now hammering addresses");
 
 							for (int i = 0; i < h_patt.len; i++)
 							{
@@ -655,6 +656,7 @@ int mem_check(SessionConfig *cfg, MemoryBuffer *memory)
 								assert(idx < sh_len);
 								// add to h_patt
 								h_patt.d_lst[i] = sh_agg_d[idx];
+                fprintf(stderr, "%s", h_patt.d_lst[i].to_string().c_str());
 								h_patt.v_baselst[i] = sh_base_v[idx];
 							}
 							fprintf(stderr, "\n");
@@ -836,14 +838,15 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
 						h_patt.d_lst = (DRAMAddr *)malloc(sizeof(DRAMAddr) * h_patt.len);
 						h_patt.v_baselst = (char **)malloc(sizeof(char *) * h_patt.len);
 
-						//fprintf(stderr, "num_banks: %d sh_num_banks: %d offset: %d offset_bk: %d sh_len: %d\n", num_banks, sh_num_banks, offset, offset_bk, sh_len);
-
+						fprintf(stderr, "num_banks: %d sh_num_banks: %d offset: %d offset_bk: %d sh_len: %d\n", num_banks, sh_num_banks, offset, offset_bk, sh_len);
+            fprintf(stderr, "now hammering addresses");
 						for (int i = 0; i < h_patt.len; i++)
 						{
 							int idx = (i / num_banks) * sh_num_banks + i % num_banks + offset_bk;
 							assert(idx < sh_len);
 							// add to h_patt
 							h_patt.d_lst[i] = sh_agg_d[idx];
+              fprintf(stderr, " %s", h_patt.d_lst[i].to_string().c_str());
 							h_patt.v_baselst[i] = sh_base_v[idx];
 						}
 						fprintf(stderr, "\n");
