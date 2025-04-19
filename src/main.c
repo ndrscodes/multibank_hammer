@@ -1,3 +1,4 @@
+#include "DRAMAddr.hpp"
 #include "DRAMConfig.hpp"
 #include "stdio.h"
 // #include <x86intrin.h> /* for rdtsc, rdtscp, clflush */
@@ -57,6 +58,7 @@ int main(int argc, char **argv)
 
 	alloc_buffer(&mem);
 	set_physmap(&mem);
+  DRAMAddr::initialize_mapping(0, mem.buffer[0]);
 
 	SessionConfig s_cfg;
 	memset(&s_cfg, 0, sizeof(SessionConfig));
