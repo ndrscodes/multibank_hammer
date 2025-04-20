@@ -743,6 +743,7 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
 
 	int tot_banks = DRAMConfig::get().banks();
 	int tot_rows = 1000;
+  const int num_rows = DRAMConfig::get().rows();
 
 	// addr translation test
 	char *ttmp_v = mem.buffer[0];
@@ -808,7 +809,7 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
 					if ((i / sh_num_banks) % 2 == 0)
 					{
 						tar_d = tar_base_d;
-						row_increment = tar_base_d.row + 1 + random_int(0, tot_rows - 1);
+						row_increment = tar_base_d.row + 1 + random_int(0, num_rows - 2 - tar_base_d.row);
 					}
 					else
 					{
@@ -887,7 +888,8 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
 							fprintf(stderr, "\n");
               
               const int ROW_CHECK_COUNT = 2;
-              bool scanned_row_map[tot_banks][tot_rows];
+              bool scanned_row_map[tot_banks][num_rows];
+              memset(scanned_row_map, false, sizeof(bool) * tot_banks * num_rows);
               for(int i = 0; i < h_patt.len; i++) {
                 DRAMAddr addr = h_patt.d_lst[i];
                 scanned_row_map[addr.bank][addr.row] = true;
