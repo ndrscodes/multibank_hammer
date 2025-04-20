@@ -541,7 +541,7 @@ int mem_check(SessionConfig *cfg, MemoryBuffer *memory)
 
 	for (int iter = 0; iter < 1000; iter++)
 	{
-		for (int num_aggs = 10; num_aggs < 11; num_aggs++)
+		for (int num_aggs = 2; num_aggs < 11; num_aggs++)
 		{
 			for (int sh_num_banks = 1; sh_num_banks < 7; sh_num_banks++)
 			{
@@ -758,9 +758,9 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
 	/////////////////////////////
 	// CLFLUSh hammer code - more randomize due to relaxed aggressor restrictions
 
-	for (int iter = 0; iter < 5000; iter++)
+	for (int iter = 0; iter < 1000; iter++)
 	{
-		for (int num_aggs = 10; num_aggs < 11; num_aggs++)
+		for (int num_aggs = 2; num_aggs < 11; num_aggs++)
 		{
 			for (int sh_num_banks = 1; sh_num_banks < 7; sh_num_banks++)
 			{
@@ -875,26 +875,44 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
 							acts = h_patt.len * h_patt.rounds;
 							fprintf(stderr, "%lu:%lu ", time / 1000000, time / acts);
 							fprintf(stderr, "\n");
-
-							for (int idx = 0; idx < h_patt.len; idx++)
-								fill_row_gb1(suite, &h_patt.d_lst[idx], h_patt.v_baselst[idx], data, true);
-
+              
+              const int ROW_CHECK_COUNT = 2;
 							for (int i = 0; i < h_patt.len; i++)
 							{
-								if (i % (num_banks * 2) == 0)
-								{
-									char* agg_v = (char *)h_patt.d_lst[i].to_virt();
+								// if (i % (num_banks * 2) == 0)
+								// {
+								// 	char* agg_v = (char *)h_patt.d_lst[i].to_virt();
 
-									MemoryChunk tmp_chunk;
+								// 	MemoryChunk tmp_chunk;
 
-									tmp_chunk.from = agg_v - (HUGE_SIZE / 2);
-									if (tmp_chunk.from < base_v) tmp_chunk.from = base_v;
-									tmp_chunk.to = tmp_chunk.from + (HUGE_SIZE / 2);
-									tmp_chunk.size = HUGE_SIZE;
+								// 	tmp_chunk.from = agg_v - (HUGE_SIZE / 2);
+								// 	if (tmp_chunk.from < base_v) tmp_chunk.from = base_v;
+								// 	tmp_chunk.to = tmp_chunk.from + (HUGE_SIZE / 2);
+								// 	tmp_chunk.size = HUGE_SIZE;
 
-
-									scan_chunk(suite, &h_patt, tmp_chunk, data);
-								}
+								// 	scan_chunk(suite, &h_patt, tmp_chunk, data);
+								// }
+                DRAMAddr aggressor = h_patt.d_lst[i];
+                for(int j = 1; j <= ROW_CHECK_COUNT; j++) {
+                  if(aggressor.row - j >= 0) {
+                    DRAMAddr victim = aggressor.add(0, -j, 0);
+                    fprintf(stderr, "scanning 8192 bytes of victim %s", victim.to_string().c_str());
+                    MemoryChunk chunk;
+                    chunk.from = (char *)victim.to_virt();
+                    chunk.to = chunk.from + 8192;
+                    chunk.size = chunk.to - chunk.from;
+                    scan_chunk(suite, &h_patt, chunk, data);
+                  }
+                }
+                for(int j = 1; j <= ROW_CHECK_COUNT; j++) {
+                  DRAMAddr victim = aggressor.add(0, j, 0);
+                  fprintf(stderr, "scanning 8192 bytes of victim %s", victim.to_string().c_str());
+                  MemoryChunk chunk;
+                  chunk.from = (char *)victim.to_virt();
+                  chunk.to = chunk.from + 8192;
+                  chunk.size = chunk.to - chunk.from;
+                  scan_chunk(suite, &h_patt, chunk, data);
+                }
 							}
 
 							fprintf(stderr, ": %lu/%lu \n", time / 1000000, time / acts);
