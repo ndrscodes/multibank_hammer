@@ -866,8 +866,8 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
 							HammerData data = hammer_sel == 1 ? ONE_TO_ZERO : ZERO_TO_ONE;
 							char *base_v = mem.buffer[0];
 							int init_data = data == ONE_TO_ZERO ? 0xff : 0x00;
-							memset(base_v, init_data, mem.size);
-              fprintf(stderr, "allocated %lu bytes with pattern %x\n", mem.size, init_data);
+							memset(base_v, init_data, ALLOC_SIZE);
+              fprintf(stderr, "allocated addresses %p to %p with %d bytes of pattern %x\n", base_v, base_v + ALLOC_SIZE, ALLOC_SIZE, init_data);
 #ifdef FLIPTABLE
 							print_start_attack_gb1(&h_patt);
 #endif
