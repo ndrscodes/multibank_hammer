@@ -8,6 +8,9 @@
 
 #include <algorithm>
 #include <assert.h>
+#include <cstddef>
+#include <cstdint>
+#include <cstdlib>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
@@ -22,6 +25,7 @@
 #include <math.h>
 #include <emmintrin.h>
 #include "DRAMAddr.hpp"
+#include "types.h"
 
 #include <time.h>
 #include <setjmp.h>
@@ -471,12 +475,29 @@ void fill_row_gb1(HammerSuite *suite, DRAMAddr *d_addr, char *v_addr, HammerData
 	}
 }
 
+bool scan_fast(MemoryChunk chunk, uint8_t pattern) {
+  uint8_t *comp_data = (uint8_t *)malloc(sizeof(uint8_t) * chunk.size);
+  if(comp_data != NULL) {
+    memset(comp_data, pattern, sizeof(uint8_t) * chunk.size);
+  }
+  if(memcmp(comp_data, chunk.from, sizeof(uint8_t) * chunk.size) == 0) {
+    free(comp_data);
+    return true;
+  }
+  free(comp_data);
+  fprintf(stderr, "WARNING: possible bitflip in chunk %p to %p.\n", chunk.from, chunk.to);
+  return false;
+}
+
 void scan_chunk(HammerSuite *suite, HammerPattern *h_patt, MemoryChunk tar_chunk, HammerData data_patt)
 {
 	char *base_v = tar_chunk.from;
 	char *end_v = tar_chunk.to;
 
 	uint8_t t_val = data_patt == ONE_TO_ZERO? 0xff : 0x00;
+  if(scan_fast(tar_chunk, t_val)) {
+    return;
+  }
 
 	FlipVal flip;
 
