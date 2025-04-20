@@ -946,7 +946,7 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
 
                   MemoryChunk chunk;
                   chunk.from = (char *)victim.to_virt();
-                  chunk.to = (char *)victim.add(0, 0, DRAMConfig::get().columns()).to_virt();
+                  chunk.to = (char *)victim.add(0, 0, DRAMConfig::get().columns() - 1).to_virt();
                   chunk.size = chunk.to - chunk.from;
                   if(chunk.from < base_v || chunk.to >= base_v + ALLOC_SIZE) {
                     fprintf(stderr, "skipping address %s as it lies outside of our allocated area (%p - %p)\n", victim.to_string().c_str(), base_v, base_v + ALLOC_SIZE);
