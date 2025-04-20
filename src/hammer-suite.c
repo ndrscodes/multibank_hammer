@@ -816,7 +816,13 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
 						row_increment = tar_d.row + 2;
 					}
 
-          tar_d.add_inplace(bank_tar[tar_bank], row_increment, random_int(0, 512));
+          tar_d.add_inplace(bank_tar[tar_bank], row_increment, 0);
+          char *virt = (char *)tar_d.to_virt();
+          if(virt < tar_base_v || virt >= tar_base_v + ALLOC_SIZE) {
+            fprintf(stderr, "WARNING: generated address (%s) is outside of allocated range. retrying generation.\n", tar_d.to_string().c_str());
+            i--;
+            continue;
+          }
 
 					sh_agg_d[i] = tar_d;
 					sh_base_v[i] = tar_base_v;
