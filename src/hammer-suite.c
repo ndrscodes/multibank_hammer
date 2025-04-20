@@ -909,10 +909,6 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
 							fprintf(stderr, "%lu:%lu ", time / 1000000, time / acts);
 							fprintf(stderr, "\n");
              
-              //reset the aggressor bits to their original state
-							for (int idx = 0; idx < h_patt.len; idx++)
-								fill_row_gb1(suite, &h_patt.d_lst[idx], h_patt.v_baselst[idx], data, true);
-              
               const int ROW_CHECK_COUNT = 2;
               bool scanned_row_map[tot_banks][num_rows];
               memset(scanned_row_map, false, sizeof(bool) * tot_banks * num_rows);
@@ -949,7 +945,7 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
 
                   MemoryChunk chunk;
                   chunk.from = (char *)victim.to_virt();
-                  chunk.to = chunk.from + 8192;
+                  chunk.to = chunk.from + DRAMConfig::get().row_to_row_offset();
                   chunk.size = chunk.to - chunk.from;
                   if(chunk.from < base_v || chunk.to >= base_v + ALLOC_SIZE) {
                     fprintf(stderr, "skipping address %s as it lies outside of our allocated area (%p - %p)\n", victim.to_string().c_str(), base_v, base_v + ALLOC_SIZE);
