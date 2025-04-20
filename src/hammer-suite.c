@@ -887,6 +887,10 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
 							acts = h_patt.len * h_patt.rounds;
 							fprintf(stderr, "%lu:%lu ", time / 1000000, time / acts);
 							fprintf(stderr, "\n");
+             
+              //reset the aggressor bits to their original state
+							for (int idx = 0; idx < h_patt.len; idx++)
+								fill_row_gb1(suite, &h_patt.d_lst[idx], h_patt.v_baselst[idx], data, true);
               
               const int ROW_CHECK_COUNT = 2;
               bool scanned_row_map[tot_banks][num_rows];
