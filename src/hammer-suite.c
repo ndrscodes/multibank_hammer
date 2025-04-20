@@ -6,6 +6,7 @@
 #include "include/allocator.h"
 #include "include/params.h"
 
+#include <algorithm>
 #include <assert.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -809,7 +810,7 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
 					if ((i / sh_num_banks) % 2 == 0)
 					{
 						tar_d = tar_base_d;
-						row_increment = tar_base_d.actual_row() + 1 + random_int(0, num_rows - 2 - tar_base_d.actual_row());
+						row_increment = (tar_base_d.actual_row() + 1 + random_int(0, tot_rows)) % num_rows;
 					}
 					else
 					{
