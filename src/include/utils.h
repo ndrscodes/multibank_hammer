@@ -10,7 +10,7 @@
 #define MB(x) 			((x)<<20ULL)
 #define GB(x) 			((x)<<30ULL)
 #define CL_SHIFT 		6
-#define CL_SIZE 		64
+#define CL_SIZE 		32
 #define PAGE_SIZE 		4096
 //#define ROW_SIZE 		(1<<13)
 #define ROW_SIZE 		(8<<10)

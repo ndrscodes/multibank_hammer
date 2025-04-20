@@ -812,7 +812,7 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
 					}
 					else
 					{
-						DRAMAddr tar_d = sh_agg_d[i - sh_num_banks];
+						tar_d = sh_agg_d[i - sh_num_banks];
 						tar_d.row = tar_d.row + 2;
 						tar_d.bank = bank_tar[tar_bank];
 					}
@@ -846,7 +846,7 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
 							assert(idx < sh_len);
 							// add to h_patt
 							h_patt.d_lst[i] = sh_agg_d[idx];
-              fprintf(stderr, " %s", h_patt.d_lst[i].to_string().c_str());
+              fprintf(stderr, "%s", h_patt.d_lst[i].to_string().c_str());
 							h_patt.v_baselst[i] = sh_base_v[idx];
 						}
 						fprintf(stderr, "\n");
