@@ -809,12 +809,12 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
 					if ((i / sh_num_banks) % 2 == 0)
 					{
 						tar_d = tar_base_d;
-						row_increment = tar_base_d.row + 1 + random_int(0, num_rows - 2 - tar_base_d.row);
+						row_increment = tar_base_d.actual_row() + 1 + random_int(0, num_rows - 2 - tar_base_d.actual_row());
 					}
 					else
 					{
 						tar_d = sh_agg_d[i - sh_num_banks];
-						row_increment = tar_d.row + 2;
+						row_increment = tar_d.actual_row() + 2;
 					}
 
           tar_d.add_inplace(bank_tar[tar_bank], row_increment, 0);
@@ -892,7 +892,7 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
               memset(scanned_row_map, false, sizeof(bool) * tot_banks * num_rows);
               for(int i = 0; i < h_patt.len; i++) {
                 DRAMAddr addr = h_patt.d_lst[i];
-                scanned_row_map[addr.bank][addr.row] = true;
+                scanned_row_map[addr.actual_bank()][addr.actual_row()] = true;
               }
 							for (int i = 0; i < h_patt.len; i++)
 							{
@@ -913,7 +913,7 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
                 for(int j = 1; j <= ROW_CHECK_COUNT; j++) {
                   if(aggressor.row - j >= 0) {
                     DRAMAddr victim = aggressor.add(0, -j, 0);
-                    if(scanned_row_map[victim.bank][victim.row] == true) {
+                    if(scanned_row_map[victim.actual_bank()][victim.actual_row()] == true) {
                       fprintf(stderr, "victim %s has already been scanned. skipping.\n", victim.to_string().c_str());
                       continue;
                     }
@@ -927,12 +927,12 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
                     }
                     fprintf(stderr, "will scan from %p to %p\n", chunk.from, chunk.to);
                     scan_chunk(suite, &h_patt, chunk, data);
-                    scanned_row_map[victim.bank][victim.row] = true;
+                    scanned_row_map[victim.actual_bank()][victim.actual_row()] = true;
                   }
                 }
                 for(int j = 1; j <= ROW_CHECK_COUNT; j++) {
                   DRAMAddr victim = aggressor.add(0, j, 0);
-                  if(scanned_row_map[victim.bank][victim.row] == true) {
+                  if(scanned_row_map[victim.actual_bank()][victim.actual_row()] == true) {
                     fprintf(stderr, "victim %s has already been scanned. skipping.\n", victim.to_string().c_str());
                     continue;
                   }
@@ -947,7 +947,7 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
                   }
                   fprintf(stderr, "will scan from %p to %p\n", chunk.from, chunk.to);
                   scan_chunk(suite, &h_patt, chunk, data);
-                  scanned_row_map[victim.bank][victim.row] = true;
+                  scanned_row_map[victim.actual_bank()][victim.actual_row()] = true;
                 }
 							}
 
