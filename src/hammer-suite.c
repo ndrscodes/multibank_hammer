@@ -938,7 +938,6 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
                     fprintf(stderr, "victim %s has already been scanned. skipping.\n", victim.to_string().c_str());
                     continue;
                   }
-                  fprintf(stderr, "scanning 8192 bytes of victim %s\n", victim.to_string().c_str());
                   MemoryChunk chunk;
                   chunk.from = (char *)victim.to_virt();
                   chunk.to = chunk.from + 8192;
