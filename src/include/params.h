@@ -18,7 +18,7 @@
 #define CONFIG_NAME_std "tmp/s_cfg.bin"
 #define O_FILE_std      ""
 #define ALLOC_SIZE     	(1<<30)
-#define HUGE_SIZE		(1<<21)
+#define HUGE_SIZE		(1<<30)
 #define ALIGN_std       1 << 21
 #define PATT_LEN 		4096
 #define AGGR_std		10

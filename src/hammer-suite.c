@@ -804,18 +804,19 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
 					DRAMAddr tar_base_d = DRAMAddr(tar_base_v);
 					DRAMAddr tar_d;
 
+          int row_increment = 0;
 					if ((i / sh_num_banks) % 2 == 0)
 					{
 						tar_d = tar_base_d;
-						tar_d.row = tar_base_d.row + 1 + random_int(0, tot_rows - 1);
-						tar_d.bank = bank_tar[tar_bank];
+						row_increment = tar_base_d.row + 1 + random_int(0, tot_rows - 1);
 					}
 					else
 					{
 						tar_d = sh_agg_d[i - sh_num_banks];
-						tar_d.row = tar_d.row + 2;
-						tar_d.bank = bank_tar[tar_bank];
+						row_increment = tar_d.row + 2;
 					}
+
+          tar_d.add_inplace(bank_tar[tar_bank], row_increment, random_int(0, 512));
 
 					sh_agg_d[i] = tar_d;
 					sh_base_v[i] = tar_base_v;
