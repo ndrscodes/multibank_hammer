@@ -887,6 +887,11 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
 							fprintf(stderr, "\n");
               
               const int ROW_CHECK_COUNT = 2;
+              bool scanned_row_map[(tot_rows + 1) * (tot_banks + 1)];
+              for(int i = 0; i < h_patt.len; i++) {
+                DRAMAddr addr = h_patt.d_lst[i];
+                scanned_row_map[(addr.row + 1) * (addr.bank + 1)] = true;
+              }
 							for (int i = 0; i < h_patt.len; i++)
 							{
 								// if (i % (num_banks * 2) == 0)
@@ -906,6 +911,10 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
                 for(int j = 1; j <= ROW_CHECK_COUNT; j++) {
                   if(aggressor.row - j >= 0) {
                     DRAMAddr victim = aggressor.add(0, -j, 0);
+                    int row_scan_idx = (victim.bank + 1) * (victim.row + 1);
+                    if(scanned_row_map[row_scan_idx] == true) {
+                      fprintf(stderr, "victim %s has already been scanned. skipping.\n", victim.to_string().c_str());
+                    }
                     fprintf(stderr, "scanning 8192 bytes of victim %s\n", victim.to_string().c_str());
                     MemoryChunk chunk;
                     chunk.from = (char *)victim.to_virt();
@@ -916,10 +925,15 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
                     }
                     fprintf(stderr, "will scan from %p to %p\n", chunk.from, chunk.to);
                     scan_chunk(suite, &h_patt, chunk, data);
+                    scanned_row_map[row_scan_idx] = true;
                   }
                 }
                 for(int j = 1; j <= ROW_CHECK_COUNT; j++) {
                   DRAMAddr victim = aggressor.add(0, j, 0);
+                  int row_scan_idx = (victim.bank + 1) * (victim.row + 1);
+                  if(scanned_row_map[row_scan_idx] == true) {
+                    fprintf(stderr, "victim %s has already been scanned. skipping.\n", victim.to_string().c_str());
+                  }
                   fprintf(stderr, "scanning 8192 bytes of victim %s\n", victim.to_string().c_str());
                   MemoryChunk chunk;
                   chunk.from = (char *)victim.to_virt();
@@ -931,6 +945,7 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
                   }
                   fprintf(stderr, "will scan from %p to %p\n", chunk.from, chunk.to);
                   scan_chunk(suite, &h_patt, chunk, data);
+                  scanned_row_map[row_scan_idx] = true;
                 }
 							}
 
