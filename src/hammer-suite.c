@@ -936,42 +936,26 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
 								// 	scan_chunk(suite, &h_patt, tmp_chunk, data);
 								// }
                 DRAMAddr aggressor = h_patt.d_lst[i];
-                for(int j = 1; j <= ROW_CHECK_COUNT; j++) {
-                  if(aggressor.row - j >= 0) {
-                    DRAMAddr victim = aggressor.add(0, -j, 0);
-                    if(scanned_row_map[victim.actual_bank()][victim.actual_row()] == true) {
-                      fprintf(stderr, "victim %s has already been scanned. skipping.\n", victim.to_string().c_str());
-                      continue;
-                    }
-                    MemoryChunk chunk;
-                    chunk.from = (char *)victim.to_virt();
-                    chunk.to = chunk.from + 8192;
-                    chunk.size = chunk.to - chunk.from;
-                    if(chunk.from < base_v) {
-                      fprintf(stderr, "skipping address %s as it lies before our start pointer (%p)\n", victim.to_string().c_str(), base_v);
-                      continue;
-                    }
-                    fprintf(stderr, "will scan from %p to %p\n", chunk.from, chunk.to);
-                    clflushopt(chunk.from);
-                    clflushopt(chunk.to);
-                    scan_chunk(suite, &h_patt, chunk, data);
-                    scanned_row_map[victim.actual_bank()][victim.actual_row()] = true;
+                for(int j = -ROW_CHECK_COUNT; j <= ROW_CHECK_COUNT; j++) {
+                  if(j == 0) {
+                    continue;
                   }
-                }
-                for(int j = 1; j <= ROW_CHECK_COUNT; j++) {
+
                   DRAMAddr victim = aggressor.add(0, j, 0);
                   if(scanned_row_map[victim.actual_bank()][victim.actual_row()] == true) {
                     fprintf(stderr, "victim %s has already been scanned. skipping.\n", victim.to_string().c_str());
                     continue;
                   }
+
                   MemoryChunk chunk;
                   chunk.from = (char *)victim.to_virt();
                   chunk.to = chunk.from + 8192;
                   chunk.size = chunk.to - chunk.from;
-                  if(chunk.to >= base_v + ALLOC_SIZE) {
-                    fprintf(stderr, "skipping address %s as it lies after our allocated range (ending at %p)\n", victim.to_string().c_str(), base_v + ALLOC_SIZE);
+                  if(chunk.from < base_v || chunk.to >= base_v + ALLOC_SIZE) {
+                    fprintf(stderr, "skipping address %s as it lies outside of our allocated area (%p - %p)\n", victim.to_string().c_str(), base_v, base_v + ALLOC_SIZE);
                     continue;
                   }
+
                   fprintf(stderr, "will scan from %s to %s\n", DRAMAddr(chunk.from).to_string().c_str(), DRAMAddr(chunk.to).to_string().c_str());
                   clflushopt(chunk.from);
                   clflushopt(chunk.to);
