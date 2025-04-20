@@ -365,12 +365,12 @@ uint64_t hammer_gb1(HammerPattern *patt, MemoryBuffer *mem, int skip_iter)
 	for (int i = 0; i < patt->rounds; i++)
 	{
 		mfence();
-		for (size_t j = 0; j < patt->len; j += 2)
+		for (size_t j = 0; j < patt->len - 1; j += 2)
 		{
 			*(volatile char *)v_lst[j];
 			*(volatile char *)v_lst[j + 1];
 		}
-		for (size_t j = 0; j < patt->len; j += 2)
+		for (size_t j = 0; j < patt->len - 1; j += 2)
 		{
 			clflushopt(v_lst[j]);
 			clflushopt(v_lst[j + 1]);
@@ -818,7 +818,7 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
 
           tar_d.add_inplace(bank_tar[tar_bank], row_increment, 0);
           char *virt = (char *)tar_d.to_virt();
-          if(virt < tar_base_v || virt >= tar_base_v + ALLOC_SIZE) {
+          if(virt < tar_base_v || virt >= tar_base_v + mem.size) {
             fprintf(stderr, "WARNING: generated address (%s) is outside of allocated range. retrying generation.\n", tar_d.to_string().c_str());
             i--;
             continue;
@@ -853,7 +853,7 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
 							assert(idx < sh_len);
 							// add to h_patt
 							h_patt.d_lst[i] = sh_agg_d[idx];
-              fprintf(stderr, "%s", h_patt.d_lst[i].to_string().c_str());
+              fprintf(stderr, " %s", h_patt.d_lst[i].to_string().c_str());
 							h_patt.v_baselst[i] = sh_base_v[idx];
 						}
 						fprintf(stderr, "\n");
@@ -865,18 +865,22 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
 							HammerData data = hammer_sel == 1 ? ONE_TO_ZERO : ZERO_TO_ONE;
 							char *base_v = mem.buffer[0];
 							int init_data = data == ONE_TO_ZERO ? 0xff : 0x00;
-							memset(base_v, init_data, ALLOC_SIZE);
-
+							memset(base_v, init_data, mem.size);
+              fprintf(stderr, "allocated %lu bytes with pattern %x\n", mem.size, init_data);
 #ifdef FLIPTABLE
 							print_start_attack_gb1(&h_patt);
 #endif
 							for (int idx = 0; idx < h_patt.len; idx++)
 								fill_row_gb1(suite, &h_patt.d_lst[idx], h_patt.v_baselst[idx], data, false);
 
+              fprintf(stderr, "row filled\n");
+
 							uint64_t time;
 							int test_num = hammer_sel;
 
+              fprintf(stderr, "starting hammering run.\n");
 							time = hammer_gb1(&h_patt, &mem, test_num);
+              fprintf(stderr, "hammering completed.\n");
 
 							acts = h_patt.len * h_patt.rounds;
 							fprintf(stderr, "%lu:%lu ", time / 1000000, time / acts);
