@@ -937,7 +937,8 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
                     continue;
                   }
 
-                  DRAMAddr victim = aggressor.add(0, j, 0);
+                  DRAMAddr victim = aggressor;
+                  victim.row += j;
                   if(scanned_row_map[victim.actual_bank()][victim.actual_row()] == true) {
                     fprintf(stderr, "victim %s has already been scanned. skipping.\n", victim.to_string().c_str());
                     continue;
