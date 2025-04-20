@@ -761,7 +761,7 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
 
 	for (int iter = 0; iter < 1000; iter++)
 	{
-		for (int num_aggs = 2; num_aggs < 11; num_aggs++)
+		for (int num_aggs = 2; num_aggs <= 45; num_aggs++)
 		{
 			for (int sh_num_banks = 1; sh_num_banks < 7; sh_num_banks++)
 			{
