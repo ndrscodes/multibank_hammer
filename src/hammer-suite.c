@@ -896,21 +896,30 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
                 for(int j = 1; j <= ROW_CHECK_COUNT; j++) {
                   if(aggressor.row - j >= 0) {
                     DRAMAddr victim = aggressor.add(0, -j, 0);
-                    fprintf(stderr, "scanning 8192 bytes of victim %s", victim.to_string().c_str());
+                    fprintf(stderr, "scanning 8192 bytes of victim %s\n", victim.to_string().c_str());
                     MemoryChunk chunk;
                     chunk.from = (char *)victim.to_virt();
                     chunk.to = chunk.from + 8192;
                     chunk.size = chunk.to - chunk.from;
+                    if(chunk.from < base_v) {
+                      fprintf(stderr, "skipping address %s as it lies before our start pointer (%p)\n", victim.to_string().c_str(), base_v);
+                    }
+                    fprintf(stderr, "will scan from %p to %p\n", chunk.from, chunk.to);
                     scan_chunk(suite, &h_patt, chunk, data);
                   }
                 }
                 for(int j = 1; j <= ROW_CHECK_COUNT; j++) {
                   DRAMAddr victim = aggressor.add(0, j, 0);
-                  fprintf(stderr, "scanning 8192 bytes of victim %s", victim.to_string().c_str());
+                  fprintf(stderr, "scanning 8192 bytes of victim %s\n", victim.to_string().c_str());
                   MemoryChunk chunk;
                   chunk.from = (char *)victim.to_virt();
                   chunk.to = chunk.from + 8192;
                   chunk.size = chunk.to - chunk.from;
+                  chunk.size = chunk.to - chunk.from;
+                  if(chunk.to >= base_v + ALLOC_SIZE) {
+                    fprintf(stderr, "skipping address %s as it lies after our allocated range (ending at %p)\n", victim.to_string().c_str(), base_v + ALLOC_SIZE);
+                  }
+                  fprintf(stderr, "will scan from %p to %p\n", chunk.from, chunk.to);
                   scan_chunk(suite, &h_patt, chunk, data);
                 }
 							}
