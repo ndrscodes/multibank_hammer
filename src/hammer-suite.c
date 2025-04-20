@@ -972,7 +972,7 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
                     fprintf(stderr, "skipping address %s as it lies after our allocated range (ending at %p)\n", victim.to_string().c_str(), base_v + ALLOC_SIZE);
                     continue;
                   }
-                  fprintf(stderr, "will scan from %p to %p\n", chunk.from, chunk.to);
+                  fprintf(stderr, "will scan from %s to %s\n", DRAMAddr(chunk.from).to_string().c_str(), DRAMAddr(chunk.to).to_string().c_str());
                   clflushopt(chunk.from);
                   clflushopt(chunk.to);
                   scan_chunk(suite, &h_patt, chunk, data);
