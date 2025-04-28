@@ -49,7 +49,7 @@ const size_t THRESHOLD_SAMPLES = 1024 * 5;
 const size_t N_BUCKETS = 200;
 const size_t THRESHOLD_WINDOW_SIZE = 5;
 const size_t PAGE_2MB = 1024 * 1024 * 2;
-static size_t PAGE_SIZE = PAGE_2MB;
+static size_t PAGE_SIZE_ACT = PAGE_2MB;
 
 typedef struct {
   double_t lower_bound;
@@ -68,12 +68,12 @@ typedef struct {
 } bucket;
 
 void* allocate(size_t n_pages) {
-  void* res = mmap(NULL, n_pages * PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
+  void* res = mmap(NULL, n_pages * PAGE_SIZE_ACT, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE | MAP_POPULATE, -1, 0);
   if(res == MAP_FAILED) {
     printf("memory allocation failed (%s)\n", strerror(errno));
     exit(EXIT_FAILURE);
   }
-  memset(res, 0x42, n_pages * PAGE_SIZE);
+  memset(res, 0x42, n_pages * PAGE_SIZE_ACT);
   return res;
 }
 
@@ -98,7 +98,7 @@ double_t avg(bucket buckets[], size_t n_buckets) {
 void* random_page_addr(void *start_addr, size_t alloc_size, size_t step_size) {
   static std::random_device rd;
   static std::mt19937 gen(rd());
-  static std::uniform_int_distribution<> distr(0, (alloc_size * PAGE_SIZE / step_size) - 1);
+  static std::uniform_int_distribution<> distr(0, (alloc_size * PAGE_SIZE_ACT / step_size) - 1);
 
   size_t random = distr(gen) * step_size;
 
@@ -279,7 +279,7 @@ int main(int argc, char **argv)
 	set_physmap(&mem);
   DRAMAddr::initialize_mapping(0, mem.buffer[0]);
 
-	uint64_t thresh = find_conflict_threshold(mem.buffer[0], N_PAGES, PAGE_SIZE / 2);
+	uint64_t thresh = find_conflict_threshold(mem.buffer[0], N_PAGES, PAGE_SIZE_ACT / 2);
   
   DRAMAddr a1 = DRAMAddr(mem.buffer[0]);
   DRAMAddr a2 = a1.add(0, 1, 0);
