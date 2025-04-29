@@ -561,11 +561,11 @@ int mem_check(SessionConfig *cfg, MemoryBuffer *memory)
 
 	// CLFLUSh hammer code - more randomize due to relaxed aggressor restrictions
 
-	for (int iter = 0; iter < 1000; iter++)
+	for (int iter = 0; iter < 250; iter++)
 	{
-		for (int num_aggs = 2; num_aggs < 11; num_aggs++)
+		for (int num_aggs = 60; num_aggs < 70; num_aggs++)
 		{
-			for (int sh_num_banks = 1; sh_num_banks < 7; sh_num_banks++)
+			for (int sh_num_banks = 2; sh_num_banks < 10; sh_num_banks++)
 			{
 				{
 

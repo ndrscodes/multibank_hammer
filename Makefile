@@ -5,7 +5,7 @@ BUILD=obj
 ODIR=src/.obj
 DATA_DIR=$(PWD)/data/
 
-CFLAGS=-g $(IDIR) -msse4.2 -ggdb -DDATA_DIR=\"$(DATA_DIR)\"
+CFLAGS=-g $(IDIR) -march=native -msse4.2 -ggdb -DDATA_DIR=\"$(DATA_DIR)\"
 CXX=g++
 #LDFLAGS= -L $(SDIR)/evsets -levsets
 
