@@ -207,7 +207,8 @@ char *dAddr_2_str(DRAMAddr d_addr, uint8_t fields)
 
 char *hPatt_2_str_thp(HammerPattern *h_patt, int fields)
 {
-	static char patt_str[10024];
+  size_t len = h_patt->len * 30 * sizeof(char);
+	static char* patt_str = (char *)malloc(len);
 	char *dAddr_str;
 
 	memset(patt_str, 0x00, 1024);
@@ -227,7 +228,7 @@ char *hPatt_2_str_thp(HammerPattern *h_patt, int fields)
 
 char *hPatt_2_str_gb1(HammerPattern *h_patt, int fields)
 {
-  size_t len = h_patt->len * 15 * sizeof(char);
+  size_t len = h_patt->len * 30 * sizeof(char);
 	static char* patt_str = (char *)malloc(len);
 	char *dAddr_str;
 
@@ -250,14 +251,18 @@ char *hPatt_2_str_gb1(HammerPattern *h_patt, int fields)
 
 void print_start_attack(HammerPattern *h_patt)
 {
-	fprintf(out_fd, "%s : ", hPatt_2_str_thp(h_patt, ROW_FIELD | BK_FIELD));
+  char *s = hPatt_2_str_thp(h_patt, ROW_FIELD | BK_FIELD);
+	fprintf(out_fd, "%s : ", s);
 	fflush(out_fd);
+  free(s);
 }
 
 void print_start_attack_gb1(HammerPattern *h_patt)
 {
-	fprintf(out_fd, "%s : ", hPatt_2_str_gb1(h_patt, ROW_FIELD | BK_FIELD));
+  char *s = hPatt_2_str_gb1(h_patt, ROW_FIELD | BK_FIELD);
+	fprintf(out_fd, "%s : ", s);
 	fflush(out_fd);
+  free(s);
 }
 
 void print_end_attack()
@@ -881,7 +886,9 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
 							h_patt.v_baselst[i] = sh_base_v[idx];
 						}
 						fprintf(stderr, "\n");
-						fprintf(stderr, "[HAMMER] - %s: ", hPatt_2_str_gb1(&h_patt, ALL_FIELDS));
+            char *s = hPatt_2_str_gb1(&h_patt, ALL_FIELDS);
+						fprintf(stderr, "[HAMMER] - %s: ", s);
+            free(s);
 
 						// SCAN FLUSHLESS
 						for (int hammer_sel = 0; hammer_sel < 2; hammer_sel++)
@@ -919,19 +926,19 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
               }
 							for (int i = 0; i < h_patt.len; i++)
 							{
-								// if (i % (num_banks * 2) == 0)
-								// {
-								// 	char* agg_v = (char *)h_patt.d_lst[i].to_virt();
+								if (i % (num_banks * 2) == 0)
+								{
+									char* agg_v = (char *)h_patt.d_lst[i].to_virt();
 
-								// 	MemoryChunk tmp_chunk;
+									MemoryChunk tmp_chunk;
 
-								// 	tmp_chunk.from = agg_v - (HUGE_SIZE / 2);
-								// 	if (tmp_chunk.from < base_v) tmp_chunk.from = base_v;
-								// 	tmp_chunk.to = tmp_chunk.from + (HUGE_SIZE / 2);
-								// 	tmp_chunk.size = HUGE_SIZE;
+									tmp_chunk.from = agg_v - (HUGE_SIZE / 2);
+									if (tmp_chunk.from < base_v) tmp_chunk.from = base_v;
+									tmp_chunk.to = tmp_chunk.from + (HUGE_SIZE / 2);
+									tmp_chunk.size = HUGE_SIZE;
 
-								// 	scan_chunk(suite, &h_patt, tmp_chunk, data);
-								// }
+									scan_chunk(suite, &h_patt, tmp_chunk, data);
+								}
                 DRAMAddr aggressor = h_patt.d_lst[i];
                 for(int j = -ROW_CHECK_COUNT; j <= ROW_CHECK_COUNT; j++) {
                   if(j == 0) {
@@ -949,7 +956,7 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
                   chunk.from = (char *)victim.to_virt();
                   chunk.to = (char *)victim.add(0, 0, DRAMConfig::get().columns() - 1).to_virt();
                   chunk.size = chunk.to - chunk.from;
-                  if(chunk.from < base_v || chunk.to >= base_v + ALLOC_SIZE) {
+                  if(chunk.from < base_v || chunk.to >= base_v + ALLOC_SIZE || chunk.to < chunk.from) {
                     fprintf(stderr, "skipping address %s as it lies outside of our allocated area (%p - %p)\n", victim.to_string().c_str(), base_v, base_v + ALLOC_SIZE);
                     continue;
                   }
