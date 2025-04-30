@@ -227,10 +227,11 @@ char *hPatt_2_str_thp(HammerPattern *h_patt, int fields)
 
 char *hPatt_2_str_gb1(HammerPattern *h_patt, int fields)
 {
-	static char patt_str[10024];
+  size_t len = h_patt->len * 15 * sizeof(char);
+	static char* patt_str = (char *)malloc(len);
 	char *dAddr_str;
 
-	memset(patt_str, 0x00, 1024);
+	memset(patt_str, 0x00, len);
 
 	for (int i = 0; i < h_patt->len; i++)
 	{
@@ -783,9 +784,9 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
 
 	for (int iter = 0; iter < 1000; iter++)
 	{
-		for (int num_aggs = 2; num_aggs <= 45; num_aggs++)
+		for (int num_aggs = 40; num_aggs <= 60; num_aggs++)
 		{
-			for (int sh_num_banks = 1; sh_num_banks < 7; sh_num_banks++)
+			for (int sh_num_banks = 2; sh_num_banks < 7; sh_num_banks++)
 			{
 
 				int sh_len = num_aggs * sh_num_banks;
