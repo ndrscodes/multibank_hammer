@@ -228,8 +228,8 @@ char *hPatt_2_str_thp(HammerPattern *h_patt, int fields)
 
 char *hPatt_2_str_gb1(HammerPattern *h_patt, int fields)
 {
-  size_t len = h_patt->len * 30 * sizeof(char);
-	static char* patt_str = (char *)malloc(len);
+  size_t len = h_patt->len * 50 * sizeof(char);
+	char* patt_str = (char *)malloc(len);
 	char *dAddr_str;
 
 	memset(patt_str, 0x00, len);
@@ -901,8 +901,8 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
 #ifdef FLIPTABLE
 							print_start_attack_gb1(&h_patt);
 #endif
-							for (int idx = 0; idx < h_patt.len; idx++)
-								fill_row_gb1(suite, &h_patt.d_lst[idx], h_patt.v_baselst[idx], data, false);
+              for (int idx = 0; idx < h_patt.len; idx++)
+                fill_row_gb1(suite, &h_patt.d_lst[idx], h_patt.v_baselst[idx], data, false);
 
               fprintf(stderr, "row filled\n");
 
@@ -912,6 +912,8 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
               fprintf(stderr, "starting hammering run.\n");
 							time = hammer_gb1(&h_patt, &mem, test_num);
               fprintf(stderr, "hammering completed.\n");
+              for (int idx = 0; idx < h_patt.len; idx++)
+                fill_row_gb1(suite, &h_patt.d_lst[idx], h_patt.v_baselst[idx], data, true);
 
 							acts = h_patt.len * h_patt.rounds;
 							fprintf(stderr, "%lu:%lu ", time / 1000000, time / acts);
