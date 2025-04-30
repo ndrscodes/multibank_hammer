@@ -787,11 +787,11 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
 	/////////////////////////////
 	// CLFLUSh hammer code - more randomize due to relaxed aggressor restrictions
 
-	for (int iter = 0; iter < 1000; iter++)
+	for (int iter = 0; iter < 250; iter++)
 	{
 		for (int num_aggs = 40; num_aggs <= 60; num_aggs++)
 		{
-			for (int sh_num_banks = 2; sh_num_banks < 7; sh_num_banks++)
+			for (int sh_num_banks = 1; sh_num_banks < 7; sh_num_banks++)
 			{
 
 				int sh_len = num_aggs * sh_num_banks;
@@ -941,7 +941,7 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
 
 									scan_chunk(suite, &h_patt, tmp_chunk, data);
 								}
-                DRAMAddr aggressor = h_patt.d_lst[i];
+                /*DRAMAddr aggressor = h_patt.d_lst[i];
                 for(int j = -ROW_CHECK_COUNT; j <= ROW_CHECK_COUNT; j++) {
                   if(j == 0) {
                     continue;
@@ -968,7 +968,7 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
                   clflushopt(chunk.to);
                   scan_chunk(suite, &h_patt, chunk, data);
                   scanned_row_map[victim.actual_bank()][victim.actual_row()] = true;
-                }
+                }*/
 							}
 
 							fprintf(stderr, ": %lu/%lu \n", time / 1000000, time / acts);
