@@ -787,7 +787,7 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
 	/////////////////////////////
 	// CLFLUSh hammer code - more randomize due to relaxed aggressor restrictions
 
-	for (int iter = 0; iter < 250; iter++)
+	for (int iter = 0; iter < 200; iter++)
 	{
 		for (int num_aggs = 40; num_aggs <= 60; num_aggs++)
 		{
@@ -919,7 +919,7 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
 							fprintf(stderr, "%lu:%lu ", time / 1000000, time / acts);
 							fprintf(stderr, "\n");
              
-              const int ROW_CHECK_COUNT = 2;
+              const int ROW_CHECK_COUNT = 5;
               bool scanned_row_map[tot_banks][num_rows];
               memset(scanned_row_map, false, sizeof(bool) * tot_banks * num_rows);
               for(int i = 0; i < h_patt.len; i++) {
@@ -928,7 +928,7 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
               }
 							for (int i = 0; i < h_patt.len; i++)
 							{
-								if (i % (num_banks * 2) == 0)
+								/*if (i % (num_banks * 2) == 0)
 								{
 									char* agg_v = (char *)h_patt.d_lst[i].to_virt();
 
@@ -940,8 +940,8 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
 									tmp_chunk.size = HUGE_SIZE;
 
 									scan_chunk(suite, &h_patt, tmp_chunk, data);
-								}
-                /*DRAMAddr aggressor = h_patt.d_lst[i];
+								}*/
+                DRAMAddr aggressor = h_patt.d_lst[i];
                 for(int j = -ROW_CHECK_COUNT; j <= ROW_CHECK_COUNT; j++) {
                   if(j == 0) {
                     continue;
@@ -956,19 +956,20 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
 
                   MemoryChunk chunk;
                   chunk.from = (char *)victim.to_virt();
-                  chunk.to = (char *)victim.add(0, 0, DRAMConfig::get().columns() - 1).to_virt();
+                  //this line may not be valid on MCs where the column bits are positioned ABOVE the row bits as that would lead to a lot of unnecessary scanning.
+                  //however, in our scenario, this significantly speeds up the scanning process.
+                  chunk.to = chunk.from + DRAMConfig::get().row_to_row_offset();
                   chunk.size = chunk.to - chunk.from;
+                  //last check is due to paranoia, we might be wrapping around to low addresses on the addition.
                   if(chunk.from < base_v || chunk.to >= base_v + ALLOC_SIZE || chunk.to < chunk.from) {
-                    fprintf(stderr, "skipping address %s as it lies outside of our allocated area (%p - %p)\n", victim.to_string().c_str(), base_v, base_v + ALLOC_SIZE);
                     continue;
                   }
 
-                  fprintf(stderr, "will scan from %s to %s\n", DRAMAddr(chunk.from).to_string().c_str(), DRAMAddr(chunk.to).to_string().c_str());
                   clflushopt(chunk.from);
                   clflushopt(chunk.to);
                   scan_chunk(suite, &h_patt, chunk, data);
                   scanned_row_map[victim.actual_bank()][victim.actual_row()] = true;
-                }*/
+                }
 							}
 
 							fprintf(stderr, ": %lu/%lu \n", time / 1000000, time / acts);
