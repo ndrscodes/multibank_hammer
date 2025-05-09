@@ -789,198 +789,196 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
 
 	for (int iter = 0; iter < 200; iter++)
 	{
-		for (int num_aggs = 40; num_aggs <= 60; num_aggs++)
-		{
-			for (int sh_num_banks = 1; sh_num_banks < 7; sh_num_banks++)
-			{
+    int num_aggs = random_int(1, 60);
+    for (int sh_num_banks = 1; sh_num_banks < 7; sh_num_banks++)
+    {
 
-				int sh_len = num_aggs * sh_num_banks;
-				DRAMAddr *sh_agg_d = (DRAMAddr *)malloc(sizeof(DRAMAddr) * sh_len);
-				char **sh_base_v = (char **)malloc(sizeof(char *) * sh_len);
+      int sh_len = num_aggs * sh_num_banks;
+      DRAMAddr *sh_agg_d = (DRAMAddr *)malloc(sizeof(DRAMAddr) * sh_len);
+      char **sh_base_v = (char **)malloc(sizeof(char *) * sh_len);
 
-				int sh_num_tar_chunks = (sh_len / sh_num_banks) / 2 + (sh_len / sh_num_banks) % 2; // double-sided
+      int sh_num_tar_chunks = (sh_len / sh_num_banks) / 2 + (sh_len / sh_num_banks) % 2; // double-sided
 
-				int bank_tar[sh_num_banks] = {-1};
+      int bank_tar[sh_num_banks] = {-1};
 
-				// select bank
-				for (int i = 0; i < (sh_num_banks);)
-				{
-					int new_bank = random_int(0, tot_banks);
+      // select bank
+      for (int i = 0; i < (sh_num_banks);)
+      {
+        int new_bank = random_int(0, tot_banks);
 
-					bool is_new = true;
-					for (int j = 0; j < i; j++)
-					{
-						if (bank_tar[j] == new_bank)
-						{
-							is_new = false;
-							break;
-						}
-					}
+        bool is_new = true;
+        for (int j = 0; j < i; j++)
+        {
+          if (bank_tar[j] == new_bank)
+          {
+            is_new = false;
+            break;
+          }
+        }
 
-					if (is_new)
-					{
-						bank_tar[i] = new_bank;
-						i++;
-					}
-				}
-				//////////////////////////
-				for (int i = 0; i < sh_len; i++)
-				{
-					int tar_bank = i % sh_num_banks;
+        if (is_new)
+        {
+          bank_tar[i] = new_bank;
+          i++;
+        }
+      }
+      //////////////////////////
+      for (int i = 0; i < sh_len; i++)
+      {
+        int tar_bank = i % sh_num_banks;
 
-					char *tar_base_v = mem.buffer[0];
+        char *tar_base_v = mem.buffer[0];
 
-					DRAMAddr tar_base_d = DRAMAddr(tar_base_v);
-					DRAMAddr tar_d;
+        DRAMAddr tar_base_d = DRAMAddr(tar_base_v);
+        DRAMAddr tar_d;
 
-          int row_increment = 0;
-					if ((i / sh_num_banks) % 2 == 0)
-					{
-						tar_d = tar_base_d;
-						row_increment = (tar_base_d.actual_row() + 1 + random_int(0, tot_rows)) % num_rows;
-					}
-					else
-					{
-						tar_d = sh_agg_d[i - sh_num_banks];
-						row_increment = tar_d.actual_row() + 2;
-					}
+        int row_increment = 0;
+        if ((i / sh_num_banks) % 2 == 0)
+        {
+          tar_d = tar_base_d;
+          row_increment = (tar_base_d.actual_row() + 1 + random_int(0, tot_rows)) % num_rows;
+        }
+        else
+        {
+          tar_d = sh_agg_d[i - sh_num_banks];
+          row_increment = tar_d.actual_row() + 2;
+        }
 
-          tar_d.add_inplace(bank_tar[tar_bank], row_increment, 0);
-          char *virt = (char *)tar_d.to_virt();
-          if(virt < tar_base_v || virt >= tar_base_v + mem.size) {
-            fprintf(stderr, "WARNING: generated address (%s) is outside of allocated range. retrying generation.\n", tar_d.to_string().c_str());
-            i--;
-            continue;
+        tar_d.add_inplace(bank_tar[tar_bank], row_increment, 0);
+        char *virt = (char *)tar_d.to_virt();
+        if(virt < tar_base_v || virt >= tar_base_v + mem.size) {
+          fprintf(stderr, "WARNING: generated address (%s) is outside of allocated range. retrying generation.\n", tar_d.to_string().c_str());
+          i--;
+          continue;
+        }
+
+        sh_agg_d[i] = tar_d;
+        sh_base_v[i] = tar_base_v;
+      }
+
+      for (int num_banks = 1; num_banks <= sh_num_banks; num_banks = num_banks * 2)
+      {
+        for (int offset = 0; offset < (sh_num_banks + num_banks - 1) / num_banks; offset++) //Iterates through pre-selected banks
+        //for (int offset = 0; offset < 1; offset++) // New bank added with increase in banks
+        {
+          int offset_bk = offset * num_banks;
+          if (offset_bk + num_banks > sh_num_banks)
+          {
+            offset_bk = sh_num_banks - num_banks;
           }
 
-					sh_agg_d[i] = tar_d;
-					sh_base_v[i] = tar_base_v;
-				}
+          HammerPattern h_patt;
+          h_patt.rounds = cfg->h_rounds;
+          h_patt.len = num_aggs * num_banks;
+          h_patt.d_lst = (DRAMAddr *)malloc(sizeof(DRAMAddr) * h_patt.len);
+          h_patt.v_baselst = (char **)malloc(sizeof(char *) * h_patt.len);
 
-				for (int num_banks = 1; num_banks <= sh_num_banks; num_banks = num_banks * 2)
-				{
-					for (int offset = 0; offset < (sh_num_banks + num_banks - 1) / num_banks; offset++) //Iterates through pre-selected banks
-					//for (int offset = 0; offset < 1; offset++) // New bank added with increase in banks
-					{
-						int offset_bk = offset * num_banks;
-						if (offset_bk + num_banks > sh_num_banks)
-						{
-							offset_bk = sh_num_banks - num_banks;
-						}
+          fprintf(stderr, "num_banks: %d sh_num_banks: %d offset: %d offset_bk: %d sh_len: %d\n", num_banks, sh_num_banks, offset, offset_bk, sh_len);
+          fprintf(stderr, "now hammering addresses");
+          for (int i = 0; i < h_patt.len; i++)
+          {
+            int idx = (i / num_banks) * sh_num_banks + i % num_banks + offset_bk;
+            assert(idx < sh_len);
+            // add to h_patt
+            h_patt.d_lst[i] = sh_agg_d[idx];
+            fprintf(stderr, " %s", h_patt.d_lst[i].to_string().c_str());
+            h_patt.v_baselst[i] = sh_base_v[idx];
+          }
+          fprintf(stderr, "\n");
+          char *s = hPatt_2_str_gb1(&h_patt, ALL_FIELDS);
+          fprintf(stderr, "[HAMMER] - %s: ", s);
+          free(s);
 
-						HammerPattern h_patt;
-						h_patt.rounds = cfg->h_rounds;
-						h_patt.len = num_aggs * num_banks;
-						h_patt.d_lst = (DRAMAddr *)malloc(sizeof(DRAMAddr) * h_patt.len);
-						h_patt.v_baselst = (char **)malloc(sizeof(char *) * h_patt.len);
-
-						fprintf(stderr, "num_banks: %d sh_num_banks: %d offset: %d offset_bk: %d sh_len: %d\n", num_banks, sh_num_banks, offset, offset_bk, sh_len);
-            fprintf(stderr, "now hammering addresses");
-						for (int i = 0; i < h_patt.len; i++)
-						{
-							int idx = (i / num_banks) * sh_num_banks + i % num_banks + offset_bk;
-							assert(idx < sh_len);
-							// add to h_patt
-							h_patt.d_lst[i] = sh_agg_d[idx];
-              fprintf(stderr, " %s", h_patt.d_lst[i].to_string().c_str());
-							h_patt.v_baselst[i] = sh_base_v[idx];
-						}
-						fprintf(stderr, "\n");
-            char *s = hPatt_2_str_gb1(&h_patt, ALL_FIELDS);
-						fprintf(stderr, "[HAMMER] - %s: ", s);
-            free(s);
-
-						// SCAN FLUSHLESS
-						for (int hammer_sel = 0; hammer_sel < 2; hammer_sel++)
-						{
-							HammerData data = hammer_sel == 1 ? ONE_TO_ZERO : ZERO_TO_ONE;
-							char *base_v = mem.buffer[0];
-							int init_data = data == ONE_TO_ZERO ? 0xff : 0x00;
-							memset(base_v, init_data, ALLOC_SIZE);
-              fprintf(stderr, "allocated addresses %p to %p with %d bytes of pattern %x\n", base_v, base_v + ALLOC_SIZE, ALLOC_SIZE, init_data);
+          // SCAN FLUSHLESS
+          for (int hammer_sel = 0; hammer_sel < 2; hammer_sel++)
+          {
+            HammerData data = hammer_sel == 1 ? ONE_TO_ZERO : ZERO_TO_ONE;
+            char *base_v = mem.buffer[0];
+            int init_data = data == ONE_TO_ZERO ? 0xff : 0x00;
+            memset(base_v, init_data, ALLOC_SIZE);
+            fprintf(stderr, "allocated addresses %p to %p with %d bytes of pattern %x\n", base_v, base_v + ALLOC_SIZE, ALLOC_SIZE, init_data);
 #ifdef FLIPTABLE
-							print_start_attack_gb1(&h_patt);
+            print_start_attack_gb1(&h_patt);
 #endif
-              for (int idx = 0; idx < h_patt.len; idx++)
-                fill_row_gb1(suite, &h_patt.d_lst[idx], h_patt.v_baselst[idx], data, false);
+            for (int idx = 0; idx < h_patt.len; idx++)
+              fill_row_gb1(suite, &h_patt.d_lst[idx], h_patt.v_baselst[idx], data, false);
 
-              fprintf(stderr, "row filled\n");
+            fprintf(stderr, "row filled\n");
 
-							uint64_t time;
-							int test_num = hammer_sel;
+            uint64_t time;
+            int test_num = hammer_sel;
 
-              fprintf(stderr, "starting hammering run.\n");
-							time = hammer_gb1(&h_patt, &mem, test_num);
-              fprintf(stderr, "hammering completed.\n");
-              for (int idx = 0; idx < h_patt.len; idx++)
-                fill_row_gb1(suite, &h_patt.d_lst[idx], h_patt.v_baselst[idx], data, true);
+            fprintf(stderr, "starting hammering run.\n");
+            time = hammer_gb1(&h_patt, &mem, test_num);
+            fprintf(stderr, "hammering completed.\n");
+            for (int idx = 0; idx < h_patt.len; idx++)
+              fill_row_gb1(suite, &h_patt.d_lst[idx], h_patt.v_baselst[idx], data, true);
 
-							acts = h_patt.len * h_patt.rounds;
-							fprintf(stderr, "%lu:%lu ", time / 1000000, time / acts);
-							fprintf(stderr, "\n");
-             
-              const int ROW_CHECK_COUNT = 5;
-              bool scanned_row_map[tot_banks][num_rows];
-              memset(scanned_row_map, false, sizeof(bool) * tot_banks * num_rows);
-              for(int i = 0; i < h_patt.len; i++) {
-                DRAMAddr addr = h_patt.d_lst[i];
-                scanned_row_map[addr.actual_bank()][addr.actual_row()] = true;
-              }
-							for (int i = 0; i < h_patt.len; i++)
-							{
-								/*if (i % (num_banks * 2) == 0)
-								{
-									char* agg_v = (char *)h_patt.d_lst[i].to_virt();
+            acts = h_patt.len * h_patt.rounds;
+            fprintf(stderr, "%lu:%lu ", time / 1000000, time / acts);
+            fprintf(stderr, "\n");
+           
+            const int ROW_CHECK_COUNT = 5;
+            bool scanned_row_map[tot_banks][num_rows];
+            memset(scanned_row_map, false, sizeof(bool) * tot_banks * num_rows);
+            for(int i = 0; i < h_patt.len; i++) {
+              DRAMAddr addr = h_patt.d_lst[i];
+              scanned_row_map[addr.actual_bank()][addr.actual_row()] = true;
+            }
+            for (int i = 0; i < h_patt.len; i++)
+            {
+              /*if (i % (num_banks * 2) == 0)
+              {
+                char* agg_v = (char *)h_patt.d_lst[i].to_virt();
 
-									MemoryChunk tmp_chunk;
+                MemoryChunk tmp_chunk;
 
-									tmp_chunk.from = agg_v - (HUGE_SIZE / 2);
-									if (tmp_chunk.from < base_v) tmp_chunk.from = base_v;
-									tmp_chunk.to = tmp_chunk.from + (HUGE_SIZE / 2);
-									tmp_chunk.size = HUGE_SIZE;
+                tmp_chunk.from = agg_v - (HUGE_SIZE / 2);
+                if (tmp_chunk.from < base_v) tmp_chunk.from = base_v;
+                tmp_chunk.to = tmp_chunk.from + (HUGE_SIZE / 2);
+                tmp_chunk.size = HUGE_SIZE;
 
-									scan_chunk(suite, &h_patt, tmp_chunk, data);
-								}*/
-                DRAMAddr aggressor = h_patt.d_lst[i];
-                for(int j = -ROW_CHECK_COUNT; j <= ROW_CHECK_COUNT; j++) {
-                  if(j == 0) {
-                    continue;
-                  }
-
-                  DRAMAddr victim = aggressor;
-                  victim.row += j;
-                  if(scanned_row_map[victim.actual_bank()][victim.actual_row()] == true) {
-                    fprintf(stderr, "victim %s has already been scanned. skipping.\n", victim.to_string().c_str());
-                    continue;
-                  }
-
-                  MemoryChunk chunk;
-                  chunk.from = (char *)victim.to_virt();
-                  //this line may not be valid on MCs where the column bits are positioned ABOVE the row bits as that would lead to a lot of unnecessary scanning.
-                  //however, in our scenario, this significantly speeds up the scanning process.
-                  chunk.to = chunk.from + DRAMConfig::get().row_to_row_offset();
-                  chunk.size = chunk.to - chunk.from;
-                  //last check is due to paranoia, we might be wrapping around to low addresses on the addition.
-                  if(chunk.from < base_v || chunk.to >= base_v + ALLOC_SIZE || chunk.to < chunk.from) {
-                    continue;
-                  }
-
-                  clflushopt(chunk.from);
-                  clflushopt(chunk.to);
-                  scan_chunk(suite, &h_patt, chunk, data);
-                  scanned_row_map[victim.actual_bank()][victim.actual_row()] = true;
+                scan_chunk(suite, &h_patt, tmp_chunk, data);
+              }*/
+              DRAMAddr aggressor = h_patt.d_lst[i];
+              for(int j = -ROW_CHECK_COUNT; j <= ROW_CHECK_COUNT; j++) {
+                if(j == 0) {
+                  continue;
                 }
-							}
 
-							fprintf(stderr, ": %lu/%lu \n", time / 1000000, time / acts);
-							fprintf(out_fd, ": %lu/%lu \n", time / 1000000, time / acts);
-							fflush(out_fd);
-						}
-						free(h_patt.d_lst);
-						free(h_patt.v_baselst);
-					}
-				}
-			}
+                DRAMAddr victim = aggressor;
+                victim.row += j;
+                if(scanned_row_map[victim.actual_bank()][victim.actual_row()] == true) {
+                  fprintf(stderr, "victim %s has already been scanned. skipping.\n", victim.to_string().c_str());
+                  continue;
+                }
+
+                MemoryChunk chunk;
+                chunk.from = (char *)victim.to_virt();
+                //this line may not be valid on MCs where the column bits are positioned ABOVE the row bits as that would lead to a lot of unnecessary scanning.
+                //however, in our scenario, this significantly speeds up the scanning process.
+                chunk.to = chunk.from + DRAMConfig::get().row_to_row_offset();
+                chunk.size = chunk.to - chunk.from;
+                //last check is due to paranoia, we might be wrapping around to low addresses on the addition.
+                if(chunk.from < base_v || chunk.to >= base_v + ALLOC_SIZE || chunk.to < chunk.from) {
+                  continue;
+                }
+
+                clflushopt(chunk.from);
+                clflushopt(chunk.to);
+                scan_chunk(suite, &h_patt, chunk, data);
+                scanned_row_map[victim.actual_bank()][victim.actual_row()] = true;
+              }
+            }
+
+            fprintf(stderr, ": %lu/%lu \n", time / 1000000, time / acts);
+            fprintf(out_fd, ": %lu/%lu \n", time / 1000000, time / acts);
+            fflush(out_fd);
+          }
+          free(h_patt.d_lst);
+          free(h_patt.v_baselst);
+        }
+      }
 		}
 	}
 }
