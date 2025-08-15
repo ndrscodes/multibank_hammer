@@ -756,7 +756,7 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
 	/////////////////////////////
 	// CLFLUSh hammer code - more randomize due to relaxed aggressor restrictions
 
-	for (int iter = 0; iter < 5000; iter++)
+	for (int iter = 0; iter < 1000; iter++)
 	{
 		for (int num_aggs = 10; num_aggs < 11; num_aggs++)
 		{
@@ -836,7 +836,7 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
 						h_patt.d_lst = (DRAMAddr *)malloc(sizeof(DRAMAddr) * h_patt.len);
 						h_patt.v_baselst = (char **)malloc(sizeof(char *) * h_patt.len);
 
-						//fprintf(stderr, "num_banks: %d sh_num_banks: %d offset: %d offset_bk: %d sh_len: %d\n", num_banks, sh_num_banks, offset, offset_bk, sh_len);
+						fprintf(stderr, "iter: %d/1000 num_banks: %d sh_num_banks: %d offset: %d offset_bk: %d sh_len: %d\n", iter, num_banks, sh_num_banks, offset, offset_bk, sh_len);
 
 						for (int i = 0; i < h_patt.len; i++)
 						{

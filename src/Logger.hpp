@@ -9,6 +9,7 @@
 #include <string>
 #include <fstream>
 #include <memory>
+#include <cstdint>
 
 template<typename ... Args>
 std::string format_string(const std::string &format, Args ... args) {
