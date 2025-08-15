@@ -901,6 +901,8 @@ int mem_check_1GB(SessionConfig *cfg, MemoryBuffer *memory)
 						free(h_patt.v_baselst);
 					}
 				}
+        free(sh_agg_d);
+        free(sh_base_v);
 			}
 		}
 	}
